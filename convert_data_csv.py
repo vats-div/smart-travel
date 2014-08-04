@@ -79,4 +79,6 @@ for i, ss in enumerate(sep_data):
     for k in temp_data.keys():
         final_data[k][i] = temp_data[k]
 
-# creating csv file
+# write the data to a csv file
+final_data = pd.DataFrame(final_data)
+final_data.to_csv("./data/TravelData.csv")
