@@ -11,6 +11,7 @@ Created on Mon Aug  4 15:10:42 2014
 
 import numpy as np
 import pandas as pd
+from collections import Counter
 
 # input a string and output a clean string
 def FilterData(text):
@@ -33,12 +34,14 @@ def FilterData(text):
     text = np.array([s for s in text if s not in sw])
     return " ".join(text)
 
-# return entropy from word frequencies
-def FindEntropy(word_freq):
-   temp = word_freq[word_freq != 0]
-   return np.sum(temp * np.log(temp))
+# return entropy from text
+def FindEntropy(text):
+    if text == '':
+	return 0.0
+    word_freq = Counter(text).values()
+    temp = word_freq[word_freq != 0]
+    return np.sum(temp * np.log(temp))
    
-
 # read the ./data/TravelData.csv
 
 main_data = pd.read_csv("./data/TravelData.csv", \
@@ -46,11 +49,17 @@ main_data = pd.read_csv("./data/TravelData.csv", \
 
 # only keep cities and remove rows that have missing GuideClass
 
+
+text_see = np.array(main_data.See)
+title = np.array(main_data.title)
+guide_class = np.array(main_data.GuideClass)
 # list of things to accepts
 gg = ['usablecity', 'usabledistrict', 'stardistrict', 'starcity']
-temp_index = np.array([t in gg for t in main_data.GuideClass])
+temp_index = np.array([t in gg for t in guide_class])
+text_see = text_see[temp_index]
+title = title[temp_index]
 
 main_data = main_data[main_data["GuideClass"].isin(gg)]
-
 text_see = np.array([FilterData(text) for text in main_data.See])
 title = np.array(main_data.title)
+entropy = np.array([FindEntropy(text) for text in text_see])
