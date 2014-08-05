@@ -9,6 +9,7 @@ Created on Mon Aug  4 15:10:42 2014
 1) Write function to compute entropy from word frequencies
 2) First attempt was to compute entropy of words individually
     and then look at the distributio of the words -> didn't work that well
+3) To do -> now look at a more global approach that uses topic modeling
 """
 
 import numpy as np
@@ -84,6 +85,8 @@ get_text = np.array(MergeStringColumns(main_data, combine))
 guide_data = np.array([FilterData(text) for text in get_text])
 title = np.array(main_data["title"])
 entropy = np.array([FindEntropy(text) for text in guide_data])
+
+ranked_list = title[np.argsort(-entropy)]
 
 # remove things have zero entropy -> nothing to do in these places
 #title = title[entropy != 0]
