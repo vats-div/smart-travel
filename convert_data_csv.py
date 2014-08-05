@@ -26,9 +26,8 @@ def CleanData(text):
 
 # return pattern from a string that contain pattern="id_num" url
 def GetPattern(text, pattern):
-    text = text.replace('"','')
     tmp = re.search(pattern, text)
-    return text[tmp.end():].split(' ',1)[0].replace(">","")
+    return text[tmp.end():].split('"', 1)[1].split('"', 1)[0]
 
 # return a dictionary with headings given by <h>HEADING</h>
 def GetMainData(text):

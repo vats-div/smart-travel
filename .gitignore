@@ -1,2 +1,4 @@
 # want to ignore the director data
 data/
+temp_dir/
+temp
