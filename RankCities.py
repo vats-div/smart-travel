@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 from collections import Counter
 import re
+import MySQLdb as db
 
 # input a string and output a clean string
 def FilterData(text):
@@ -65,6 +66,10 @@ def MergeStringColumns(df,strs):
     for i in range(len(strs)-1,len(strs)):
         tmp = tmp + ' ' + df[strs[i]]
     return tmp
+    
+def GetTopWord(text):
+    cc = Counter(text.split()).most_common(10)
+    return ' '.join([cw[0] for cw in cc])
 
 # read the ./data/TravelData.csv
 
@@ -84,9 +89,45 @@ main_data = main_data[main_data["GuideClass"].isin(gg)]
 get_text = np.array(MergeStringColumns(main_data, combine))
 guide_data = np.array([FilterData(text) for text in get_text])
 title = np.array(main_data["title"])
-entropy = np.array([FindEntropy(text) for text in guide_data])
+entropy_values = np.array([FindEntropy(text) for text in guide_data])
 
-ranked_list = title[np.argsort(-entropy)]
+#all_titles = np.array(range(0,len(title)))
+ranked_list = np.argsort(-entropy_values)
+main_data["ranking"] = ranked_list
+main_data["top_words"] = np.array([GetTopWord(text) for text in guide_data])
+
+#Open connection to mysql database
+con = db.connect('localhost','root','','initial_ranked_list')
+
+# cursors
+cr = con.cursor()
+cr.execute("drop table if exists ranking;")
+
+# create table columns
+tmp = '''
+create table ranking (
+        rank int(7),
+        title text,
+        search_terms text,
+        primary key (rank)
+);
+'''
+
+cr.execute(tmp)
+
+# write columns the database
+rank_c = range(0,len(ranked_list))
+top_words_c = np.array(main_data["top_words"])[ranked_list]
+title_c = title[ranked_list]
+
+for i, tt in enumerate(rank_c): 
+    tmp_c = "INSERT INTO ranking (rank, title, search_terms) VALUES (%s, %s, %s)" 
+    tmp_v = [tt+1, title_c[i], top_words_c[i]]
+    cr.execute(tmp_c,tuple(tmp_v))
+
+con.commit()
+cr.close()
+con.close()
 
 # remove things have zero entropy -> nothing to do in these places
 #title = title[entropy != 0]
