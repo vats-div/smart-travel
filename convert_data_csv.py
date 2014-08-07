@@ -15,7 +15,7 @@ def CleanData(text):
     # remove headers like See, Do, etc
     section_headings = ["See", "Do", "Learn", \
                         "Eat", "Drink", "Buy", \
-                        "GuideClass", "LinkBefore"]
+                        "GuideClass", "LinkBefore", "Region"]
     for s in section_headings:
         text = text.replace("<h2>"+s+"</h2>", "")
     
@@ -44,7 +44,7 @@ def GetMainData(text):
     for tt in text_divide:
         st = tt.split('\n', 1)[0] # get te <h>LABEL</h> line
         st = st.replace("<h>", "").replace("</h>","")
-        MainData[st] = tt.split('\n', 1)[1].replace('\n', "").replace('\r', "")
+        MainData[st] = tt.split('\n', 1)[1].replace('\n', " ").replace('\r', " ").lstrip().rstrip()
         
     return MainData
     
@@ -68,7 +68,7 @@ final_data["id"] = id_data
 num_rows = len(id_data)
 section_headings = ["See", "Do", "Learn", \
                     "Eat", "Drink", "Buy", \
-                    "GuideClass", "LinkBefore"]
+                    "GuideClass", "LinkBefore", "Region"]
 for h in section_headings:
     final_data[h] = [''] * num_rows
                     
@@ -80,4 +80,4 @@ for i, ss in enumerate(sep_data):
 
 # write the data to a csv file
 final_data = pd.DataFrame(final_data)
-final_data.to_csv("./data/TravelData.csv")
+#final_data.to_csv("./data/TravelData.csv")

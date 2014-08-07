@@ -18,33 +18,11 @@ from collections import Counter
 import re
 import MySQLdb as db
 
-# input a string and output a clean string
-def FilterData(text):
-    if type(1.0) == type(text):
-        text = ' '
-        return text
-        
-    # remove punctuations
-    text = re.sub(r'\[.*?\]|\(.*?\)|\W', ' ', text)
-    ff = open("remove_puncs.txt")
-    list_words = ff.read().split()
-    ff.close()
-    for ll in list_words:
-        text = text.replace(ll,"")
-    
-    # remove stopwords
-    ff = open("stopwords.txt")
-    sw = ff.read()
-    sw = sw.split()
-    text = text.lower().split()
-    text = np.array([s for s in text if s not in sw])
+# 1 -> Simple method based on local entropy
+# 2 -> Elegant method based on 
+RANK_STRATEGY = 2
 
-    # convert plurals to singulars
-    # not implemented yet  
-    
-    # remove two letter words and return
-    #return " ".join(word for word in text if len(word)>2)
-    return " ".join(text)
+
   
 # return entropy from text
 def FindEntropy(text):
@@ -59,42 +37,54 @@ def FindEntropy(text):
     temp = word_freq[word_freq != 0]
     return -np.sum(temp * np.log(temp))
 
-def MergeStringColumns(df,strs):
+# assumes that topic modeling has been run
+# and then reads the outputs
+def FindEntropyTopicModeling(num_docs):
+    f = open("./output_csv/TopicsInDocs.csv", 'r')
+    topic_dist = f.read().split()
+    f.close()    
+    topic_dist = topic_dist[8:]
+    entropy_values = [0] * num_docs
+    prob_values = []
+    for tmp in topic_dist:
+        tmp = tmp.split(',')
+        print tmp
+        # name of th file
+        tmp_name = int(tmp[1].split('/')[-1].split('.')[0])
+        prob = [float(t) for t in tmp[3:len(tmp):2]]
+        prob = prob / sum(prob)
+        prob = np.array(prob)
+        prob = prob[prob > 0]
+        prob_values.append(prob)
+        e = -np.sum(prob * np.log(prob))
+        if np.isnan(e):
+            print prob
+        entropy_values[tmp_name] = e
+    
+    return entropy_values, prob_values
 
-    tmp = df[strs[0]] + ' ' + df[strs[1]]
-    
-    for i in range(len(strs)-1,len(strs)):
-        tmp = tmp + ' ' + df[strs[i]]
-    return tmp
-    
+
 def GetTopWord(text):
     cc = Counter(text.split()).most_common(10)
     return ' '.join([cw[0] for cw in cc])
 
 # read the ./data/TravelData.csv
 
-main_data = pd.read_csv("./data/TravelData.csv", \
-            usecols=['title', 'See', 'Do', 'Learn', 'Eat', 'Drink', 'GuideClass'], na_values=[''])
-
-n_rows = np.max(main_data.count())
-
-# list of things to accept
-gg = ['usablecity', 'usabledistrict', \
-        'stardistrict', 'starcity','guidedistrict', 'guidecity']
-
-# filter data according to GuideClass
-combine = ["See", "Do", "Learn", "Eat", "Drink"]
-
-main_data = main_data[main_data["GuideClass"].isin(gg)]
-get_text = np.array(MergeStringColumns(main_data, combine))
-guide_data = np.array([FilterData(text) for text in get_text])
+main_data = pd.read_csv("./data/FilteredTravelData.csv")
+guide_data = np.array(main_data["all_data"])
 title = np.array(main_data["title"])
-entropy_values = np.array([FindEntropy(text) for text in guide_data])
+
+RANK_STRATEGY = 2
+
+if RANK_STRATEGY == 1:
+    entropy_values = np.array([FindEntropy(text) for text in guide_data])
+
+if RANK_STRATEGY == 2:     
+    entropy_values = FindEntropyTopicModeling(len(main_data))[0]
 
 #all_titles = np.array(range(0,len(title)))
-ranked_list = np.argsort(-entropy_values)
+ranked_list = np.argsort(-np.array(entropy_values))
 main_data["ranking"] = ranked_list
-main_data["top_words"] = np.array([GetTopWord(text) for text in guide_data])
 
 #Open connection to mysql database
 con = db.connect('localhost','root','','initial_ranked_list')
@@ -109,9 +99,11 @@ create table ranking (
         rank int(7),
         title text,
         search_terms text,
+        top_words text,
         primary key (rank)
 );
 '''
+
 
 cr.execute(tmp)
 
@@ -119,17 +111,14 @@ cr.execute(tmp)
 rank_c = range(0,len(ranked_list))
 top_words_c = np.array(main_data["top_words"])[ranked_list]
 title_c = title[ranked_list]
+top_words_more = np.array(main_data["top_words_100"])[ranked_list]
 
 for i, tt in enumerate(rank_c): 
-    tmp_c = "INSERT INTO ranking (rank, title, search_terms) VALUES (%s, %s, %s)" 
-    tmp_v = [tt+1, title_c[i], top_words_c[i]]
+    print i
+    tmp_c = "INSERT INTO ranking (rank, title, search_terms, top_words) VALUES (%s, %s, %s, %s)" 
+    tmp_v = [tt+1, title_c[i], top_words_c[i], top_words_more[i]]
     cr.execute(tmp_c,tuple(tmp_v))
 
 con.commit()
 cr.close()
 con.close()
-
-# remove things have zero entropy -> nothing to do in these places
-#title = title[entropy != 0]
-#text_see = text_see[entropy != 0]
-#entropy = entropy[entropy != 0]
