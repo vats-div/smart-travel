@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Starter Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/cities.css" rel="stylesheet">
+    <link href="../static/css/slider.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="starter-template.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="../../assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">SmartExplore</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <!--<li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li> -->
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div id="user_inputs" class="well">
+		<div class="input-group">
+		  <input type="text" class="typeahead form-control col-md-4" id="keywords" placeholder="What do you want to do?"/>
+	<br><br>
+		  <input type="text" class="typeahead form-control col-md-4" id="country" placeholder="Enter region(s)"/>
+	<br><br>
+		  <input type="text" class="typeahead form-control col-md-4" id="like" placeholder="Enter cities you like"/>
+		</div>
+	<br>
+           Filter by population: <div class="slider slider-horizontal" style="width: 414px;"><div class="slider-track"><div class="slider-selection" style="left: 24.242424242424242%; width: 20.2020202020202%;"></div><div class="slider-handle round" style="left: 24.242424242424242%;"></div><div class="slider-handle round" style="left: 44.44444444444444%;"></div></div><div class="tooltip top" style="top: -40px; left: 111.68181818181816px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">250 : 450</div></div><input type="text" class="span2" value="" data-slider-min="10" data-slider-max="1000" data-slider-step="5" data-slider-value="[250,450]" id="sl2"></div> 
+<br>
+<br>
+           Filter by consumer price index: <div class="slider slider-horizontal" style="width: 414px;"><div class="slider-track"><div class="slider-selection" style="left: 24.242424242424242%; width: 20.2020202020202%;"></div><div class="slider-handle round" style="left: 24.242424242424242%;"></div><div class="slider-handle round" style="left: 44.44444444444444%;"></div></div><div class="tooltip top" style="top: -40px; left: 111.68181818181816px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">250 : 450</div></div><input type="text" class="span2" value="" data-slider-min="10" data-slider-max="1000" data-slider-step="5" data-slider-value="[250,450]" id="sl2"></div> 
+
+<br>
+<br>
+	Filter by best time of the year
+<br>
+<br>
+
+	<button type="submit" class="btn" id="submit">Submit</button>
+
+      </div>
+
+    	<table id = "ranklist" class="table table-hover">
+    	</table>
+
+    	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+	
+    	<script src="../static/js/bootstrap.min.js"></script>
+
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script src="../static/js/bootstrap.js"></script>
+    <script>  
+
+	//var key = document.getElementById("keywords").value;
+	//alert(key);
+
+	//var akey = $("#keywords").val();
+	//alert(akey);
+        $("#ranklist").hide();
+	$(document).ready(function() {
+		$("#submit").click(function() {
+
+                        //get keyword from user input
+                        var keywords = $("#keywords").val();
+                        var country = $("#country").val();
+			console.log(keywords);
+			console.log(country);
+
+                        //send keyword to server via ajax get request
+			$.get("/rank", {keywords : keywords, country : country}, function( data ) {
+				// data is response from server
+				$("#ranklist").replaceWith(data);
+			});
+                        
+	        });
+	});
+    </script>
+
+  </body>
+</html>
+
