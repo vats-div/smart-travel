@@ -12,8 +12,23 @@ Created on Wed Aug  6 23:42:43 2014
 import numpy as np
 import pandas as pd
 from collections import Counter
+from nltk.corpus import wordnet as wn
+from nltk.corpus.reader import NOUN
+from nltk.stem.wordnet import WordNetLemmatizer
+
 import re
 
+# convert word to singular
+def ConvertToSingular(word):
+    
+    synsets = wn.synsets(word, NOUN)
+    if len(synsets) > 0:
+        # then noun
+        lmtzr = WordNetLemmatizer()
+        return lmtzr.lemmatize(word)
+    else:
+        return word
+    
 # input a string and output a clean string
 def FilterData(text):
     if type(1.0) == type(text):
@@ -35,8 +50,8 @@ def FilterData(text):
     text = text.lower().split()
     text = np.array([s for s in text if s not in sw])
 
-    # TO DO
-    #   convert plurals to singulars
+    #   convert plurals to singulars using nltk
+    text = np.array([ConvertToSingular(s) for s in text])    
     
     return " ".join(text)
 
