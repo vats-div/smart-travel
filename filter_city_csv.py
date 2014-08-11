@@ -30,7 +30,7 @@ def ConvertToSingular(word):
         return word
     
 # input a string and output a clean string
-def FilterData(text):
+def FilterData(text, sw, i):
     if type(1.0) == type(text):
         text = ' '
         return text
@@ -43,18 +43,13 @@ def FilterData(text):
     for ll in list_words:
         text = text.replace(ll," ")
     
-    # remove stopwords
-    ff = open("stopwords.txt")
-    sw = ff.read()
-    sw = sw.split()
+    # remove stopwords and additional words
+    # convert plurals to singulars using nltk
     text = text.lower().split()
-    text = np.array([s for s in text if s not in sw])
-
-    #   convert plurals to singulars using nltk
-    text = np.array([ConvertToSingular(s) for s in text])    
+    text = np.array([ConvertToSingular(s) for s in text if s not in sw])    
     
+    #return text
     return " ".join(text)
-
 
 # merge strings with the DataFrame df
 # return numpy array
@@ -71,8 +66,39 @@ def GetTopWord(text,num_w):
     cc = Counter(text.split()).most_common(num_w)
     return ' '.join([cw[0] for cw in cc])
     
+def RemoveWordsInKeys(text,kys):
+    text = [s for s in text.split() if s not in kys]
+    return " ".join(text)
+
+def RemoveWordsThatOccurOnce(guide_data):
+    txt_all = ' '.join(guide_data)
+    cc = Counter(txt_all.split())
+    kys = np.array(cc.keys())
+    vls = np.array(cc.values())
+    kys = kys[vls == 1]
+    print "Number of words to remove is" + str(kys)
+    
+    # save list of words in kys
+    f = open('extra_stopwords.txt', 'w')
+    for wds in kys:
+        f.write("%s\n" % wds)
+    f.close()
+    
+    # remove words from guide_data that are in keys
+    guide_data = np.array([RemoveWordsInKeys(text,kys) for text in guide_data])
+    
+    return guide_data
+    
 # read file
 main_data = pd.read_csv("./data/TravelData.csv", na_values=[''])
+
+# load stop words
+ff = open("stopwords.txt")
+sw = ff.read()
+sw = sw.split()
+ff.close()
+ff = open("extra_stopwords.txt")
+sw_extra = set(ff.read().split())
 
 main_data_copy = main_data.copy()
 
@@ -89,8 +115,12 @@ combine = ["See", "Do", "Learn", "Eat", "Drink"]
 
 main_data = main_data[main_data["GuideClass"].isin(gg)].reset_index()
 get_text = MergeStringColumns(main_data, combine)
-guide_data = np.array([FilterData(text) for text in get_text])
+guide_data = np.array([FilterData(text, sw, i) for i, text in enumerate(get_text)])
 main_data["all_data"] = guide_data
+
+# drop the columns in combine
+for cols in combine:
+    main_data = main_data.drop(cols, 1)
 
 # remove strings where guide_data = ' '
 ind = np.array(main_data["all_data"]) != ' '
@@ -110,7 +140,7 @@ for i, tt in enumerate(title):
     tt = tt.split('/')
     if len(tt) > 1:
         # get first element
-        print ' '.join(tt)
+        #print ' '.join(tt)
         tt = tt[0].lstrip().rstrip()
         index_tt = np.where(title == tt)[0]
         
@@ -122,8 +152,9 @@ for i, tt in enumerate(title):
 main_data["all_data"] = guide_data
 main_data = main_data[ind]
 main_data.index = range(len(main_data))
-# try to populate region properly
 
+# try to populate region properly so that county/state can be accurately
+# detected
 region = np.array(main_data["Region"])
 link_before = np.array(main_data["LinkBefore"])
 
@@ -142,17 +173,34 @@ for i, reg in enumerate(region):
                 ind = ind[0]
                 reg_new = region_copy[ind]
                 if type(reg_new) != type(1.0):
-                    print i
+                    # print i
                     region[i] = reg_new
                     
 # update region in main_data
 main_data["Region"] = region
 
-guide_data = np.array(main_data["all_data"])
+# remove words that only occur once
+# precomputed to avoid computations
+#print "Now Removing Words that occur once"
+#guide_data = np.array(main_data["all_data"])
+#guide_data = RemoveWordsThatOccurOnce(guide_data)
+#main_data["all_data"] = guide_data
+
+## already saved in sw_extra from a previous iteration
+#part_word = "sjhshksnsmbdkwnd" # some random word
+#pw = " " + part_word + " "
+#all_text = pw.join(guide_data)
+#regex = re.compile(r'\b(' + r'|'.join(sw_extra) + r')\b\s*')
+#out = regex.sub("", all_text)
+#guide_data = np.array(out.split(part_word))
+#main_data["all_data"] = guide_data
+
+guide_data = main_data["all_data"]
 title = np.array(main_data["title"])
 
 main_data["top_words_100"] = np.array([GetTopWord(text,100) for text in guide_data])
 main_data["top_words"] = np.array([GetTopWord(text,10) for text in guide_data])
+
 
 # write the files 
 # run a bash command to delete files in ./temp_dir/
