@@ -14,40 +14,68 @@ import pandas as pd
 from collections import Counter
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader import NOUN
-from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.stem import wordnet
+import nltk
 
 import re
 
+        
+def get_wordnet_pos(treebank_tag):
+
+    if treebank_tag.startswith('J'):
+        return wordnet.wordnet.ADJ
+    elif treebank_tag.startswith('V'):
+        return wordnet.wordnet.VERB
+    elif treebank_tag.startswith('N'):
+        return wordnet.wordnet.NOUN
+    elif treebank_tag.startswith('R'):
+        return wordnet.wordnet.ADV
+    else:
+        return ''
+    
 # convert word to singular
 def ConvertToSingular(word):
     
     synsets = wn.synsets(word, NOUN)
     if len(synsets) > 0:
         # then noun
-        lmtzr = WordNetLemmatizer()
+        lmtzr = wordnet.WordNetLemmatizer()
         return lmtzr.lemmatize(word)
     else:
         return word
+
+def MyStemWord(word,inp):
+    
+    lmtzr = wordnet.WordNetLemmatizer()
+    if inp == '':
+        return lmtzr.lemmatize(word)
+    else:
+        return lmtzr.lemmatize(word, inp)
     
 # input a string and output a clean string
-def FilterData(text, sw, i):
+def FilterData(text, sw):
+    
     if type(1.0) == type(text):
         text = ' '
         return text
         
     # remove punctuations
     text = re.sub(r'\[.*?\]|\(.*?\)|\W', ' ', text)
-    ff = open("remove_puncs.txt")
+    ff = open("./word_files/remove_puncs.txt")
     list_words = ff.read().split()
     ff.close()
     for ll in list_words:
         text = text.replace(ll," ")
     
     # remove stopwords and additional words
-    # convert plurals to singulars using nltk
+    # stem words using wordnet
     text = text.lower().split()
-    text = np.array([ConvertToSingular(s) for s in text if s not in sw])    
+    pp_tag = nltk.pos_tag(text)    
+    text = np.array([MyStemWord(s[0], get_wordnet_pos(s[1])) \
+                for s in pp_tag if s[0] not in sw])    
     
+    # remove all two letter words
+    text = np.array([s for s in text if len(s) > 2])
     #return text
     return " ".join(text)
 
@@ -70,34 +98,51 @@ def RemoveWordsInKeys(text,kys):
     text = [s for s in text.split() if s not in kys]
     return " ".join(text)
 
-def RemoveWordsThatOccurOnce(guide_data):
+def RemoveLowFrequencyWords(guide_data, num_w):
     txt_all = ' '.join(guide_data)
     cc = Counter(txt_all.split())
     kys = np.array(cc.keys())
     vls = np.array(cc.values())
-    kys = kys[vls == 1]
-    print "Number of words to remove is" + str(kys)
+    kys = kys[vls < num_w]
+    print "Number of words to remove is " + str(len(kys))
     
     # save list of words in kys
-    f = open('extra_stopwords.txt', 'w')
+    f = open('./word_files/extra_stopwords.txt', 'w')
     for wds in kys:
         f.write("%s\n" % wds)
     f.close()
     
     # remove words from guide_data that are in keys
-    guide_data = np.array([RemoveWordsInKeys(text,kys) for text in guide_data])
+    # I only run this in the java code when learning a statistical modl
+    # for computational efficiency
     
+    #guide_data = np.array([RemoveWordsInKeys(text,kys) for text in guide_data])
+        
+        
+def RemoveCityReference(guide_data,title):
+    
+    for i, tt in enumerate(title):
+        
+        # clean the title first
+        gg = guide_data[i]
+        tt = tt.split('(')[0].lower()
+        gg = gg.replace(tt,'')
+        guide_data[i] = gg
+        
     return guide_data
-    
+        
+
 # read file
+print "Reading File..."
 main_data = pd.read_csv("./data/TravelData.csv", na_values=[''])
+print "Done Reading File..."
 
 # load stop words
-ff = open("stopwords.txt")
+ff = open("./word_files/stopwords.txt")
 sw = ff.read()
 sw = sw.split()
 ff.close()
-ff = open("extra_stopwords.txt")
+ff = open("./word_files/extra_stopwords.txt")
 sw_extra = set(ff.read().split())
 
 main_data_copy = main_data.copy()
@@ -115,7 +160,7 @@ combine = ["See", "Do", "Learn", "Eat", "Drink"]
 
 main_data = main_data[main_data["GuideClass"].isin(gg)].reset_index()
 get_text = MergeStringColumns(main_data, combine)
-guide_data = np.array([FilterData(text, sw, i) for i, text in enumerate(get_text)])
+guide_data = np.array([FilterData(text, sw) for text in get_text])
 main_data["all_data"] = guide_data
 
 # drop the columns in combine
@@ -133,6 +178,8 @@ title = np.array(main_data["title"])
 # now merge different guides
 # if the title of a guide is text1/text2, move contents to
 # guide with title text1
+
+print "Merging guides..."
 
 ind = [True] * int(len(title))
 
@@ -153,8 +200,12 @@ main_data["all_data"] = guide_data
 main_data = main_data[ind]
 main_data.index = range(len(main_data))
 
+print "Done merging guides..."
+
 # try to populate region properly so that county/state can be accurately
 # detected
+
+print "Detecting Country/Region of every city"
 region = np.array(main_data["Region"])
 link_before = np.array(main_data["LinkBefore"])
 
@@ -175,17 +226,44 @@ for i, reg in enumerate(region):
                 if type(reg_new) != type(1.0):
                     # print i
                     region[i] = reg_new
-                    
+
 # update region in main_data
 main_data["Region"] = region
+
+print "Done detecting Country/Region of every city"
+
 
 # remove words that only occur once
 # precomputed to avoid computations
 #print "Now Removing Words that occur once"
 #guide_data = np.array(main_data["all_data"])
-#guide_data = RemoveWordsThatOccurOnce(guide_data)
-#main_data["all_data"] = guide_data
+print "Removing low frequency words"
+RemoveLowFrequencyWords(guide_data, 20)
+print "Done removing low frequency words"
 
+
+guide_data = np.array(main_data["all_data"])
+title = np.array(main_data["title"])
+
+# if guide_data contains a reference to its city,
+# remove it
+print "Removing city reference from guide"
+guide_data = RemoveCityReference(guide_data,title)
+print "Done removing city reference"
+
+# write the files 
+# run a bash command to delete files in ./temp_dir/
+for i, tt in enumerate(guide_data):
+    f = open("./guide_data/" + str(i) + ".txt", 'w')
+    f.write(tt)
+    f.close()
+    
+# write file to a new csv file
+    
+main_data.to_csv('./data/FilteredTravelData.csv')
+
+# code not needed
+#main_data["all_data"] = guide_data
 ## already saved in sw_extra from a previous iteration
 #part_word = "sjhshksnsmbdkwnd" # some random word
 #pw = " " + part_word + " "
@@ -194,21 +272,3 @@ main_data["Region"] = region
 #out = regex.sub("", all_text)
 #guide_data = np.array(out.split(part_word))
 #main_data["all_data"] = guide_data
-
-guide_data = main_data["all_data"]
-title = np.array(main_data["title"])
-
-main_data["top_words_100"] = np.array([GetTopWord(text,100) for text in guide_data])
-main_data["top_words"] = np.array([GetTopWord(text,10) for text in guide_data])
-
-
-# write the files 
-# run a bash command to delete files in ./temp_dir/
-for i, tt in enumerate(guide_data):
-    f = open("./temp_dir/" + str(i) + ".txt", 'w')
-    f.write(tt)
-    f.close()
-    
-# write file to a new csv file
-    
-main_data.to_csv('./data/FilteredTravelData.csv')
