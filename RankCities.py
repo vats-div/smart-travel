@@ -21,8 +21,6 @@ import MySQLdb as db
 # 1 -> Simple method based on local entropy
 # 2 -> Elegant method based on 
 RANK_STRATEGY = 2
-
-
   
 # return entropy from text
 def FindEntropy(text):
@@ -45,24 +43,23 @@ def FindEntropyTopicModeling(num_docs):
     f.close()    
     topic_dist = topic_dist[8:]
     entropy_values = [0] * num_docs
-    prob_values = []
+    prob_values = [0] * num_docs
     for tmp in topic_dist:
         tmp = tmp.split(',')
-        print tmp
         # name of th file
         tmp_name = int(tmp[1].split('/')[-1].split('.')[0])
         prob = [float(t) for t in tmp[3:len(tmp):2]]
-        prob = prob / sum(prob)
+        #prob = prob / sum(prob)
+        prob.append(1.0-sum(prob))
         prob = np.array(prob)
         prob = prob[prob > 0]
-        prob_values.append(prob)
+        prob_values[tmp_name] = prob
         e = -np.sum(prob * np.log(prob))
         if np.isnan(e):
             print prob
         entropy_values[tmp_name] = e
     
     return entropy_values, prob_values
-
 
 def GetTopWord(text):
     cc = Counter(text.split()).most_common(10)
@@ -74,7 +71,7 @@ main_data = pd.read_csv("./data/FilteredTravelData.csv")
 guide_data = np.array(main_data["all_data"])
 title = np.array(main_data["title"])
 
-RANK_STRATEGY = 2
+RANK_STRATEGY = 1
 
 if RANK_STRATEGY == 1:
     entropy_values = np.array([FindEntropy(text) for text in guide_data])
@@ -99,12 +96,11 @@ create table ranking (
         rank int(7),
         title text,
         search_terms text,
-        top_words text,
+        top_words blob,
+        region text,
         primary key (rank)
 );
 '''
-
-
 cr.execute(tmp)
 
 # write columns the database
@@ -112,11 +108,14 @@ rank_c = range(0,len(ranked_list))
 top_words_c = np.array(main_data["top_words"])[ranked_list]
 title_c = title[ranked_list]
 top_words_more = np.array(main_data["top_words_100"])[ranked_list]
+region = np.array(main_data["Region"])[ranked_list]
 
-for i, tt in enumerate(rank_c): 
+for i in rank_c: 
     print i
-    tmp_c = "INSERT INTO ranking (rank, title, search_terms, top_words) VALUES (%s, %s, %s, %s)" 
-    tmp_v = [tt+1, title_c[i], top_words_c[i], top_words_more[i]]
+    tmp_c = "INSERT INTO ranking (rank, title, top_words, search_terms, region) VALUES (%s, %s, %s, %s, %s)" 
+    if type(region[i]) == type(1.0):
+        region[i] = ' '
+    tmp_v = [i+1, title_c[i], top_words_c[i], top_words_more[i], region[i].replace('_',' ')]
     cr.execute(tmp_c,tuple(tmp_v))
 
 con.commit()

@@ -53,7 +53,9 @@ def MyStemWord(word,inp):
         return lmtzr.lemmatize(word, inp)
     
 # input a string and output a clean string
-def FilterData(text, sw):
+def FilterData(text, sw, i):
+    
+    print i
     
     if type(1.0) == type(text):
         text = ' '
@@ -156,12 +158,14 @@ gg = ['usable_city', 'usable_district', \
         'outline_city', 'outline_district']
         
 # filter data according to GuideClass
-combine = ["See", "Do", "Learn", "Eat", "Drink"]
+combine = ["See", "Do", "Learn", "Eat", "Drink", "Buy"]
 
 main_data = main_data[main_data["GuideClass"].isin(gg)].reset_index()
 get_text = MergeStringColumns(main_data, combine)
-guide_data = np.array([FilterData(text, sw) for text in get_text])
+print "Filtering Data.."
+guide_data = np.array([FilterData(text, sw, i) for i, text in enumerate(get_text)])
 main_data["all_data"] = guide_data
+print "Done Filtering Data ..."
 
 # drop the columns in combine
 for cols in combine:
@@ -249,6 +253,7 @@ title = np.array(main_data["title"])
 # remove it
 print "Removing city reference from guide"
 guide_data = RemoveCityReference(guide_data,title)
+main_data["all_data"] = guide_data
 print "Done removing city reference"
 
 # write the files 
@@ -259,7 +264,7 @@ for i, tt in enumerate(guide_data):
     f.close()
     
 # write file to a new csv file
-    
+main_data["top_words"] = np.array([GetTopWord(text,10) for text in guide_data])
 main_data.to_csv('./data/FilteredTravelData.csv')
 
 # code not needed
