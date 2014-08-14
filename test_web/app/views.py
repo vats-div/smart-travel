@@ -1,8 +1,10 @@
 from flask import render_template, request
 from app import app
 import pymysql as mdb
+import numpy as np
+from RankingUsingMallet import GetRanking
 
-db= mdb.connect(user="root", host="localhost", db="initial_ranked_list", charset='utf8')
+db= mdb.connect(user="root", host="localhost", db="guide_data", charset='utf8')
 
 @app.route('/')
 @app.route('/index')
@@ -34,35 +36,34 @@ def cities_page_fancy():
 
 def cities_rank():
         print request.args.get('keywords', '')
+
+	# keywords
         user_input = request.args.get('keywords', '')
 	user_input = user_input.lstrip().rstrip()
 
+	# filter for regions
         country_input = request.args.get('country', '')
 	country_input = country_input.lstrip().rstrip()
 
+	# cities people like
+	like_input = request.args.get('like', '')
+	like_input = like_input.lstrip().rstrip()
+
+	# get ranking
+	rnk = GetRanking(user_input.split(','),like_input.split(','))
+
+	print rnk
+
 	with db:
 		cur = db.cursor()
-		cmnd = "SELECT title, top_words FROM ranking "
+		cmnd = "SELECT id, title, top_words, url FROM MainData "
 
-		if len(user_input.split()) > 0:
-			cmnd = cmnd + "WHERE ("
-			# SELECT title, top_words FROM ranking WHERE 
-			# (search_terms LIKE "%pub%" AND search_terms LIKE "%bar%") AND
-			# (region LIKE "% UNITED %" OR region LIKE "% Australia %");
-			for st in user_input.split():
-				cmnd = cmnd + " search_terms LIKE '%"
-				cmnd = cmnd + "%s" % st
-				cmnd = cmnd + "%'"
-				if user_input.split()[-1] != st:
-					cmnd = cmnd + " AND "
-			cmnd = cmnd + ")"
+		# SELECT title, top_words FROM ranking WHERE 
+		# (search_terms LIKE "%pub%" AND search_terms LIKE "%bar%") AND
+		# (region LIKE "% UNITED %" OR region LIKE "% Australia %");
 
 		if country_input != '':
-			if len(user_input.split()) > 0:
-				cmnd = cmnd + ' AND '
-			else:
-				cmnd = cmnd + 'WHERE '
-			cmnd = cmnd + '('
+			cmnd = cmnd + 'WHERE ('
        	        	for st in country_input.split(','):
                       		cmnd = cmnd + " region LIKE '% "
                         	cmnd = cmnd + "%s" % st
@@ -75,16 +76,34 @@ def cities_rank():
 		print cmnd
 		cur.execute(cmnd)
 		query_results = cur.fetchall()
+
 	cities = []
 	for result in query_results:
-		cities.append(dict(title=result[0], search_terms=result[1]))
+		cities.append(dict(id=result[0], title=result[1], top_words=result[2], url=result[3]))
+
+	# only rank things in id
+	ListOfID = []
+	for city in cities:
+		ListOfID.append(city["id"]-1)	
+
+	# get the corresponding ranking
+	rnk = rnk[ListOfID]
+
+	# sort then
+	argrank = np.argsort(rnk)
+
+	#print type(cities)
+	#print type(cities[0])
+	#rnk = rnk[cities["id"]-1]
+	#print rnk
 
 	#return "<h3>This is the server response!</h3>"
 	tmp = '<table id = "ranklist" class="table table-hover">'
-    	tmp = tmp + '<tr><th>Name</th><th>Key Words</th></tr>'
+    	tmp = tmp + '<tr><th>Name</th><th>Top Keywords</th></tr>'
 
-	for city in cities:
-    		tmp = tmp + '<tr><td>' + city["title"] + '</td><td>'+ city["search_terms"] + '</td></tr>'
+	for a in argrank:
+		city = cities[a]
+    		tmp = tmp + '<tr><td>' + '<a href=' + city["url"] + ' target="_blank">' + city["title"] + '</a>' + '</td><td>'+ city["top_words"] + '</td></tr>'
 	
 	tmp = tmp + '</table>'
 
