@@ -105,7 +105,6 @@ def MergeStringColumns(df,strs):
         tmp = tmp + ' ' + df[strs[i]]
     return np.array(tmp)
     
-    
 def GetTopWord(text,num_w):
     cc = Counter(text.split()).most_common(num_w)
     return ' '.join([cw[0] for cw in cc])
@@ -145,8 +144,54 @@ def RemoveCityReference(guide_data,title):
         guide_data[i] = gg
         
     return guide_data
-        
-# read file
+    
+def AddRegionsFromPrevious(main_data, main_data_copy):
+    region = np.array(main_data["Region"])
+    link_before = np.array(main_data["LinkBefore"])
+    
+    region_copy = np.array(main_data_copy["Region"])
+    title = np.array(main_data_copy["title"])
+    link_copy = np.array(main_data_copy["LinkBefore"])
+    
+    for i, reg in enumerate(region):
+        if reg == '':
+            # get link before
+            lb = link_before[i]
+            if lb != '':
+                lb = lb.lstrip().rstrip()
+                lb = ' '.join(lb.split('_'))
+                ind = np.where(title == lb)[0] # index for link before
+                if len(ind) > 0:
+                    ind = ind[0]
+                    reg_new = region_copy[ind]
+                    if reg_new != '':
+                        # print i
+                        region[i] = reg_new
+                    else:
+                        # go two levels down
+                        region[i] = region[i] + ' '.join(link_copy[ind].split('_'))
+                        lb_new = link_copy[ind]
+                        ind = np.where(title == lb_new)[0] #index for link before link before
+                        if len(ind) > 0:
+                            ind = ind[0]
+                            reg_new = region_copy[ind]
+                            if reg_new != '':
+                                region[i] = reg_new
+                            else: # go two levels down
+                                region[i] = region[i] + ' '.join(link_copy[ind].split('_'))
+                                lb_new = link_copy[ind]
+                                ind = np.where(title == lb_new)[0] #index for link before link before
+                                if len(ind) > 0:
+                                    ind = ind[0]
+                                    reg_new = region_copy[ind]
+                                    if reg_new != '':
+                                        region[i] = reg_new
+                                    else:
+                                        region[i] = region[i] + ' '.join(link_copy[ind].split('_'))
+
+    return region
+    
+## START OF MAIN FILES
 print "Reading File..."
 main_data = pd.read_csv("./data/TravelData.csv").fillna(value = '')
 print "Done Reading File..."
@@ -170,7 +215,7 @@ gg = ['usable_city', 'usable_district', \
         'outline_city', 'outline_district']
     
 # filter data according to GuideClass
-combine = ["See", "Do", "Learn", "Eat", "Drink"]
+combine = ["See", "Do", "Learn", "Eat", "Drink", "Buy"]
 
 main_data = main_data[main_data["GuideClass"].isin(gg)].reset_index()
 get_text = MergeStringColumns(main_data, combine)
@@ -222,30 +267,9 @@ print "Done merging guides..."
 # detected
 
 print "Detecting Country/Region of every city"
-region = np.array(main_data["Region"])
-link_before = np.array(main_data["LinkBefore"])
-
-region_copy = np.array(main_data_copy["Region"])
-title = np.array(main_data_copy["title"])
-
-for i, reg in enumerate(region):
-    if type(reg) == type(1.0):
-        # get link before
-        lb = link_before[i]
-        if type(lb) != type(1.0):
-            lb = lb.lstrip().rstrip()
-            lb = ' '.join(lb.split('_'))
-            ind = np.where(title == lb)[0] # index for link before
-            if len(ind) > 0:
-                ind = ind[0]
-                reg_new = region_copy[ind]
-                if type(reg_new) != type(1.0):
-                    # print i
-                    region[i] = reg_new
-
 # update region in main_data
+region = AddRegionsFromPrevious(main_data,main_data_copy)
 main_data["Region"] = region
-
 print "Done detecting Country/Region of every city"
 
 # remove words that only occur once
