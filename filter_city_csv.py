@@ -55,7 +55,7 @@ def MyStemWord(word,inp):
 # input a string and output a clean string
 def FilterData(text, sw, i):
     
-    print i
+    #print i
     
     if type(1.0) == type(text):
         text = ' '
@@ -72,9 +72,11 @@ def FilterData(text, sw, i):
     # remove stopwords and additional words
     # stem words using wordnet
     text = text.lower().split()
-    pp_tag = nltk.pos_tag(text)    
-    text = np.array([MyStemWord(s[0], get_wordnet_pos(s[1])) \
-                for s in pp_tag if s[0] not in sw])    
+    #pp_tag = nltk.pos_tag(text)    
+    #text = np.array([MyStemWord(s[0], get_wordnet_pos(s[1])) \
+    #            for s in pp_tag if s[0] not in sw])  
+    
+    text = np.array([s for s in text if s not in sw])
     
     # remove all two letter words
     text = np.array([s for s in text if len(s) > 2])
@@ -85,9 +87,21 @@ def FilterData(text, sw, i):
 # return numpy array
 def MergeStringColumns(df,strs):
 
+    if type(df[strs[0]]) == float(1.0):
+            df[strs[0]] = ''
+
+    if len(strs) == 1:
+        return np.array(df[strs[0]])    
+    
+    if type(df[strs[1]]) == float(1.0):
+            df[strs[1]] = ''
+                        
     tmp = df[strs[0]] + ' ' + df[strs[1]]
     
     for i in range(len(strs)-1,len(strs)):
+        if type(df[strs[i]]) == float(1.0):
+            df[strs[i]] = ''
+
         tmp = tmp + ' ' + df[strs[i]]
     return np.array(tmp)
     
@@ -120,7 +134,6 @@ def RemoveLowFrequencyWords(guide_data, num_w):
     
     #guide_data = np.array([RemoveWordsInKeys(text,kys) for text in guide_data])
         
-        
 def RemoveCityReference(guide_data,title):
     
     for i, tt in enumerate(title):
@@ -133,10 +146,9 @@ def RemoveCityReference(guide_data,title):
         
     return guide_data
         
-
 # read file
 print "Reading File..."
-main_data = pd.read_csv("./data/TravelData.csv", na_values=[''])
+main_data = pd.read_csv("./data/TravelData.csv").fillna(value = '')
 print "Done Reading File..."
 
 # load stop words
@@ -156,9 +168,9 @@ gg = ['usable_city', 'usable_district', \
         'star_district', 'star_city', \
         'guide_district', 'guide_city', \
         'outline_city', 'outline_district']
-        
+    
 # filter data according to GuideClass
-combine = ["See", "Do", "Learn", "Eat", "Drink", "Buy"]
+combine = ["See", "Do", "Learn", "Eat", "Drink"]
 
 main_data = main_data[main_data["GuideClass"].isin(gg)].reset_index()
 get_text = MergeStringColumns(main_data, combine)
@@ -172,7 +184,7 @@ for cols in combine:
     main_data = main_data.drop(cols, 1)
 
 # remove strings where guide_data = ' '
-ind = np.array(main_data["all_data"]) != ' '
+ind = np.array(main_data["all_data"]) != ''
 main_data = main_data[ind]
 main_data.index = range(len(main_data))
 
@@ -236,7 +248,6 @@ main_data["Region"] = region
 
 print "Done detecting Country/Region of every city"
 
-
 # remove words that only occur once
 # precomputed to avoid computations
 #print "Now Removing Words that occur once"
@@ -244,7 +255,6 @@ print "Done detecting Country/Region of every city"
 print "Removing low frequency words"
 RemoveLowFrequencyWords(guide_data, 20)
 print "Done removing low frequency words"
-
 
 guide_data = np.array(main_data["all_data"])
 title = np.array(main_data["title"])
@@ -277,3 +287,25 @@ main_data.to_csv('./data/FilteredTravelData.csv')
 #out = regex.sub("", all_text)
 #guide_data = np.array(out.split(part_word))
 #main_data["all_data"] = guide_data
+
+#main_data = pd.read_csv("./data/FilteredTravelData.csv").fillna('')
+#ind = np.array(main_data["all_data"] == '')
+#word_num = np.array([len(gg.split()) for gg in np.array(main_data["all_data"])])
+#ind = ind + np.array(word_num < 50)
+#ind = np.logical_not(ind)
+#
+#guide_data = np.array(main_data["all_data"])[ind]
+#title = np.array(main_data["title"])[ind]
+#top_words = np.array(main_data["top_words"])[ind]
+#Region = np.array(main_data["Region"])[ind]
+#url = np.array(main_data["url"])[ind]
+#word_num = word_num[ind]
+#RemoveLowFrequencyWords(guide_data, 20)
+#
+#for i, tt in enumerate(guide_data):
+#    f = open("./guide_data/" + str(i) + ".txt", 'w')
+#    f.write(tt)
+#    f.close()
+#
+#guide_data = np.array(main_data["all_data])
+#RemoveLowFrequencyWords(guide_data, 20)
