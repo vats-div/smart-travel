@@ -52,8 +52,6 @@ def cities_rank():
 	# get ranking
 	rnk = GetRanking(user_input.split(','),like_input.split(','))
 
-	print rnk
-
 	with db:
 		cur = db.cursor()
 		cmnd = "SELECT id, title, top_words, url FROM MainData "

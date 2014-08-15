@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title> TBD  </title>
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/bootstrap-slider.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="../static/css/starter-template.css" rel="stylesheet">
+    <link href="../static/css/cities.css" rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>-->
+    <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../static/js/bootstrap.js"></script>
+    <script src="../static/js/bootstrap-slider.js"></script>
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <!--<script src="../../static/js/ie-emulation-modes-warning.js"></script>-->
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!--<script src="../../static/js/ie10-viewport-bug-workaround.js"></script>-->
+
+    <!--<script src="http://fgnass.github.io/spin.js/spin.js"></script>-->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script>  
+
+	//var key = document.getElementById("keywords").value;
+	//alert(key);
+
+	//var akey = $("#keywords").val();
+	//alert(akey);
+
+	//var availTags = ["beach", "bar"];
+	//$( "#keywords" ).autocomplete({
+//		source: availTags
+//	});
+
+	var opts = {
+	  lines: 13, // The number of lines to draw
+	  length: 20, // The length of each line
+	  width: 10, // The line thickness
+	  radius: 30, // The radius of the inner circle
+	  corners: 1, // Corner roundness (0..1)
+	  rotate: 0, // The rotation offset
+	  direction: 1, // 1: clockwise, -1: counterclockwise
+	  color: '#000', // #rgb or #rrggbb or array of colors
+	  speed: 1, // Rounds per second
+	  trail: 60, // Afterglow percentage
+	  shadow: false, // Whether to render a shadow
+	  hwaccel: false, // Whether to use hardware acceleration
+	  className: 'spinner', // The CSS class to assign to the spinner
+	  zIndex: 2e9, // The z-index (defaults to 2000000000)
+	  top: '50%', // Top position relative to parent
+	  left: '50%' // Left position relative to parent
+	};
+
+
+        //$("#outputs").hide();
+        //$("#ranklist").hide();
+	$("#size_slider").slider({});
+
+	$(document).ready(function() {
+		$("#submit").click(function() {
+
+                        //get keyword from user input
+			var target = document.getElementById('submit');
+			//var spinner = new Spinner(opts).spin(target);
+
+                        var keywords = $("#keywords").val();
+                        var country = $("#country").val();
+                        var like = $("#like").val();
+			console.log(keywords);
+			console.log(country);
+			console.log(like);
+
+                        //send keyword to server via ajax get request
+			$.get("/rank", {keywords : keywords, country : country, like : like}, function( data ) {
+				// data is response from server
+        			$("#outputs").show();
+				$("#ranklist").replaceWith(data);
+				//spinner.stop()
+			});
+                        
+	        });
+	});
+    </script>
+
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          
+	  <a class="navbar-brand" href="#">[InsertHere]</a>
+
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+	<h1 class="text-center title">[Insert Name]</h1>
+
+	<div id="user_inputs" class="form-horizontal well col-sm-8" role="form">
+	  	<div class="form-group">
+    			<label for="keywords" class="col-sm-2 control-label">Your Interests</label>
+    			<div class="col-sm-10">
+ 				<input type="text" class="typeahead form-control col-md-4" id="keywords" placeholder="e.g., beach, hiking, bar"/>
+    			</div>
+  		</div>
+
+  		<div class="form-group">
+    			<label for="like" class="col-sm-2 control-label">Favorite Cities</label>
+    			<div class="col-sm-10">
+				<input type="text" class="typeahead form-control col-md-4" id="like" placeholder="e.g., New York City, Prague"/>
+    			</div>
+  		</div>
+
+  		<div class="form-group">
+    			<label for="country" class="col-sm-2 control-label">Destination Region(s)</label>
+    			<div class="col-sm-10">
+  				<input type="text" class="typeahead form-control col-md-4" id="country" placeholder="e.g., New York, Europe"/>
+    			</div>
+  		</div>
+ 		<center>
+  			<button class="btn btn-primary" id="submit">Discover Cities!</button>
+ 		</center>
+  	</div>
+    </div>
+
+    <div id="outputs" class="well col-sm-8">
+
+            <!--<div class="slider slider-horizontal" style="width:200px; margin:auto">
+		<div class="slider-track">
+              		<div class="slider-selection" style="left: 0%; width: 80%;"></div>
+	    		<div class="slider-handle round" style="left: 80%;"></div>
+			<div class="slider-handle round hide" style="left: 0%;"></div>
+	    	</div>
+	    	<div class="tooltip top" style="top: -40px; left: 65px;">
+			<div class="tooltip-arrow">
+			</div>
+	    		<div class="tooltip-inner">Current value: 8
+			</div>
+		</div>-->
+		<input type="text" class="span2" value="" data-slider-min="10" data-slider-max="1000" data-slider-step="5" data-slider-value="[250,450]" id="size_slider" > 
+	   <!--</div>-->
+
+                <br><br>
+
+                <table id = "ranklist" class="table table-hover">
+                </table>
+    </div>
+
+
+    </div><!-- /.container -->
+  </body>
+</html>
+

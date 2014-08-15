@@ -23,6 +23,8 @@ def ScoreDocument(X, word_count,total_words_eachtopic,topic_props,i):
     tmp = np.array(word_count[i,:].todense()).flatten()
     tmp = tmp / total_words_eachtopic 
     tmp = np.dot(topic_props, tmp)
+
+    print np.shape(X[:,i])
     xx = np.array(X[:,i].todense()).flatten()
 
     mix = 0.5
@@ -36,6 +38,8 @@ def GetRanking(search_word, city_search_word):
     
     filehandler = open('topic_model_data.obj', 'r')
     D = pickle.load(filehandler)
+   
+    print len(D["title"])
     
     ListOfKeywords = [np.where(D["word_list"] == ww)[0] for ww in search_word]
     LifOfCityKeywords = [np.where(D["title"]==ww)[0] for ww in city_search_word]
@@ -49,7 +53,7 @@ def GetRanking(search_word, city_search_word):
             score.append(D["num_words"] * \
             ScoreDocument(D["X"], D["word_count"], \
             D["total_words_eachtopic"],D["topic_props"],\
-            index_keyword))
+            index_keyword[0]))
     
     for ind in LifOfCityKeywords:
     
@@ -78,9 +82,9 @@ def GetRanking(search_word, city_search_word):
 
 #search_word = ['pub','beer','museum']
 #city_search_word = ['']
-
-#ranking = GetRanking(D, search_word, city_search_word)
-
+#
+#ranking = GetRanking(search_word, city_search_word)
+#
 #word_num = np.array([len(text.split()) for text in main_data["all_data"]])
 #topic1 = doc_tops[:,3]
 #ranked_list = np.argsort(-np.array(topic1))

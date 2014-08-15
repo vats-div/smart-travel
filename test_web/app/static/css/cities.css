@@ -1,4 +1,4 @@
-body {padding-top : 60px}
+body {padding-top : 60px; background-image : url("../img.jpg"); background-repeat: no-repeat; background-attachment: fixed; background-size: 100%}
 #user_inputs{width:60%;margin-left:20%}
 #outputs{width:60%;margin-left:20%}
 .form-horizontal .control-label{padding-top:0px}
