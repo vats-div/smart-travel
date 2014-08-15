@@ -40,6 +40,8 @@ def cities_rank():
 	# keywords
         user_input = request.args.get('keywords', '')
 	user_input = user_input.lstrip().rstrip()
+	if len(user_input) > 0:
+		user_input = user_input.split(',')
 
 	# filter for regions
         country_input = request.args.get('country', '')
@@ -48,9 +50,12 @@ def cities_rank():
 	# cities people like
 	like_input = request.args.get('like', '')
 	like_input = like_input.lstrip().rstrip()
-
+	if len(like_input) > 0:
+		like_input = like_input.split(',')
+		print like_input
+	
 	# get ranking
-	rnk = GetRanking(user_input.split(','),like_input.split(','))
+	rnk = GetRanking(user_input,like_input)
 
 	with db:
 		cur = db.cursor()
@@ -99,9 +104,14 @@ def cities_rank():
 	tmp = '<table id = "ranklist" class="table table-hover">'
     	tmp = tmp + '<tr><th>Name</th><th>Top Keywords</th></tr>'
 
+	cnt = 1;
+	max_results = 200;
 	for a in argrank:
+		cnt = cnt + 1;
 		city = cities[a]
     		tmp = tmp + '<tr><td>' + '<a href=' + city["url"] + ' target="_blank">' + city["title"] + '</a>' + '</td><td>'+ city["top_words"] + '</td></tr>'
+		if cnt > max_results:
+			break;
 	
 	tmp = tmp + '</table>'
 

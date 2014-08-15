@@ -5,3 +5,4 @@ body {padding-top : 60px; background-image : url("../img.jpg"); background-repea
 #ex1Slider .slider-selection {
 	background: #BABABA;
 }
+.slider.slider-horizontal{margin:20px}

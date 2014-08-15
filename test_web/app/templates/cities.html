@@ -19,7 +19,7 @@
 
     <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 
-    <script type='text/javascript' src="http://modernizr.com/downloads/modernizr-latest.js"></script> 
+    <script type='text/javascript' src="../static/js/spin.js"></script>
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
@@ -78,12 +78,18 @@
         //$("#outputs").hide();
 
 	$(document).ready(function() {
+			$('#size_slider').slider({
+	          				formater: function(value) {
+	            				return 'Current value: ' + value;
+	          				}
+	        		});
+	
 
 	 		$("#submit").click(function() {
 
                         //get keyword from user input
 			var target = document.getElementById('submit');
-			//var spinner = new Spinner(opts).spin(target);
+			var spinner = new Spinner(opts).spin(target);
 
                         var keywords = $("#keywords").val();
                         var country = $("#country").val();
@@ -97,15 +103,9 @@
 				// data is response from server
         			$("#outputs").removeClass("hide");
 				$("#ranklist").replaceWith(data);
-				//spinner.stop()
+				spinner.stop()
 				$("#size_slider").removeClass("hide");
-			   	$('#size_slider').slider({
-	          				formater: function(value) {
-	            				return 'Current value: ' + value;
-	          				}
-	        });
-	
-
+			   	
 
 			});
                         
@@ -162,6 +162,13 @@
   				<input type="text" class="typeahead form-control col-md-4" id="country" placeholder="e.g., New York, Europe"/>
     			</div>
   		</div>
+
+<div id="my_slider" style="width:420px;margin:auto">
+<b>Less Activities </b>
+		<input type="text" class="span2" value="" data-slider-min="0" data-slider-max="100" data-slider-step="5" data-slider-value="[0,100]" id="size_slider" > 
+<b>   More Activities</b>
+</div>
+
  		<center>
   			<button class="btn btn-primary" id="submit">Discover Cities!</button>
  		</center>
@@ -169,12 +176,6 @@
     </div>
 
     <div id="outputs" class="well col-sm-8 hide">
-
-<div id="my_slider" style="width:350px;margin:auto">
-<b>Smaller Cities    </b>
-		<input type="text" class="span2 hide" value="" data-slider-min="0" data-slider-max="100" data-slider-step="5" data-slider-value="[0,100]" id="size_slider" > 
-<b>   Larger Cities</b>
-</div>
 
 
                 <br><br>

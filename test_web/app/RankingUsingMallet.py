@@ -41,8 +41,10 @@ def GetRanking(search_word, city_search_word):
    
     print len(D["title"])
     
-    ListOfKeywords = [np.where(D["word_list"] == ww)[0] for ww in search_word]
-    LifOfCityKeywords = [np.where(D["title"]==ww)[0] for ww in city_search_word]
+    ListOfKeywords = [np.where(D["word_list"] == ww.lstrip().rstrip())[0] for ww in search_word]
+    print ListOfKeywords
+    LifOfCityKeywords = [np.where(D["title"]== ww.lstrip().rstrip())[0] for ww in city_search_word]
+    print LifOfCityKeywords
     #score = np.zeros((num_docs,))
     
     score = []
@@ -56,11 +58,13 @@ def GetRanking(search_word, city_search_word):
             index_keyword[0]))
     
     for ind in LifOfCityKeywords:
-    
         if len(ind) > 0:
             tt = -np.sum(abs(D["topic_props"] - D["topic_props"][ind,:]),axis=1)
             tt[ind] = -10000.00
             score.append(tt)
+
+    if len(score) == 0:
+	score.append(D["num_words"])
         
     rl = 0
     num_rows = len(D["title"])
