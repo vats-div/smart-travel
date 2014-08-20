@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title> TBD  </title>
+    <title> cities4me  </title>
 
     <!-- Bootstrap core CSS -->
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
@@ -73,16 +73,16 @@
 	  left: '50%' // Left position relative to parent
 	};
 
-        //$("#size_slider").hide();
         //$("#ranklist").hide();
         //$("#outputs").hide();
 
 	$(document).ready(function() {
-			$('#size_slider').slider({
-	          				formater: function(value) {
-	            				return 'Current value: ' + value;
-	          				}
-	        		});
+		//	$('#size_slider').slider({
+	        //  				formater: function(value) {
+	         //   					//return 'Current value: ' + value;
+		//					return ''
+	         // 				}
+	        //		});
 	
 
 	 		$("#submit").click(function() {
@@ -97,6 +97,14 @@
 			console.log(keywords);
 			console.log(country);
 			console.log(like);
+			
+			//check if keywords, country, and like are in database
+			$.get("/check", {keywords : keywords, country : country, like : like}, function( data ) {
+				// check_data is response from server
+				if (data != "") {
+					alert(data);
+				}
+			});
 
                         //send keyword to server via ajax get request
 			$.get("/rank", {keywords : keywords, country : country, like : like}, function( data ) {
@@ -129,7 +137,7 @@
             <span class="icon-bar"></span>
           </button>
           
-	  <a class="navbar-brand" href="#">[InsertHere]</a>
+	  <a class="navbar-brand" href="#">cities4me</a>
 
         </div>
         <div class="collapse navbar-collapse">
@@ -163,11 +171,13 @@
     			</div>
   		</div>
 
+<!--
 <div id="my_slider" style="width:420px;margin:auto">
 <b>Less Activities </b>
 		<input type="text" class="span2" value="" data-slider-min="0" data-slider-max="100" data-slider-step="5" data-slider-value="[0,100]" id="size_slider" > 
 <b>   More Activities</b>
 </div>
+-->
 
  		<center>
   			<button class="btn btn-primary" id="submit">Discover Cities!</button>
@@ -180,7 +190,7 @@
 
                 <br><br>
 
-                <table id = "ranklist" class="table table-hover">
+                <table id = "ranklist" class="table table-striped">
                 </table>
     </div>
 

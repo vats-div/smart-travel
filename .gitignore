@@ -3,3 +3,5 @@ data/
 temp_dir/
 temp
 test_web/topic_model_data.obj
+guide_data/
+pickle_objects/

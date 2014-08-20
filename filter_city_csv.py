@@ -55,7 +55,7 @@ def MyStemWord(word,inp):
 # input a string and output a clean string
 def FilterData(text, sw, i):
     
-    #print i
+    print i
     
     if type(1.0) == type(text):
         text = ' '
@@ -72,11 +72,11 @@ def FilterData(text, sw, i):
     # remove stopwords and additional words
     # stem words using wordnet
     text = text.lower().split()
-    #pp_tag = nltk.pos_tag(text)    
-    #text = np.array([MyStemWord(s[0], get_wordnet_pos(s[1])) \
-    #            for s in pp_tag if s[0] not in sw])  
+    pp_tag = nltk.pos_tag(text)    
+    text = np.array([MyStemWord(s[0], get_wordnet_pos(s[1])) \
+                for s in pp_tag if s[0] not in sw])  
     
-    text = np.array([s for s in text if s not in sw])
+    #text = np.array([s for s in text if s not in sw])
     
     # remove all two letter words
     text = np.array([s for s in text if len(s) > 2])
@@ -197,7 +197,7 @@ main_data = pd.read_csv("./data/TravelData.csv").fillna(value = '')
 print "Done Reading File..."
 
 # load stop words
-ff = open("./word_files/stopwords.txt")
+ff = open("./word_files/ExtraWords.txt")
 sw = ff.read()
 sw = sw.split()
 ff.close()
@@ -215,9 +215,9 @@ gg = ['usable_city', 'usable_district', \
         'outline_city', 'outline_district']
     
 # filter data according to GuideClass
-combine = ["See", "Do", "Learn", "Eat", "Drink", "Buy"]
+combine = ["See", "Do", "Learn", "Eat", "Drink"]
 
-main_data = main_data[main_data["GuideClass"].isin(gg)].reset_index()
+main_data = main_data[main_data["GuideClass"].isin(gg)].reset_index(drop=True)
 get_text = MergeStringColumns(main_data, combine)
 print "Filtering Data.."
 guide_data = np.array([FilterData(text, sw, i) for i, text in enumerate(get_text)])
@@ -257,11 +257,33 @@ for i, tt in enumerate(title):
         ind[i] = False
         
 # reassign guide data
+# merge New York City separately since it is not labeled properly
+ind_nyc = np.where(title == "New York City")[0]
+i1 = np.where(title == 'Manhattan')[0]
+i2 = np.where(title == 'Brooklyn')[0]
+i3 = np.where(title == 'Queens')[0]
+i4 = np.where(title == 'Bronx')[0]
+i5 = np.where(title == 'Staten Island')[0]
+ind[i1[0]] = False
+ind[i2[0]] = False
+ind[i3[0]] = False
+ind[i4[0]] = False
+ind[i5[0]] = False
+guide_data[ind_nyc] = (guide_data[ind_nyc] + ' ' + guide_data[i1] + ' ' +
+                        guide_data[i2] + ' ' +
+                        guide_data[i3] + ' ' +
+                        guide_data[i4] + ' ' +
+                        guide_data[i5])
+
 main_data["all_data"] = guide_data
 main_data = main_data[ind]
 main_data.index = range(len(main_data))
 
 print "Done merging guides..."
+
+# delete guides that have very less information
+word_num = np.array([len(g.split()) for g in np.array(main_data["all_data"])])
+main_data = main_data[word_num > 50].reset_index(drop=True)
 
 # try to populate region properly so that county/state can be accurately
 # detected
@@ -277,14 +299,13 @@ print "Done detecting Country/Region of every city"
 #print "Now Removing Words that occur once"
 #guide_data = np.array(main_data["all_data"])
 print "Removing low frequency words"
-RemoveLowFrequencyWords(guide_data, 20)
+RemoveLowFrequencyWords(np.array(main_data["all_data"]), 20)
 print "Done removing low frequency words"
 
 guide_data = np.array(main_data["all_data"])
 title = np.array(main_data["title"])
 
-# if guide_data contains a reference to its city,
-# remove it
+# if guide_data contains a reference to its city, remove it
 print "Removing city reference from guide"
 guide_data = RemoveCityReference(guide_data,title)
 main_data["all_data"] = guide_data
@@ -296,9 +317,11 @@ for i, tt in enumerate(guide_data):
     f = open("./guide_data/" + str(i) + ".txt", 'w')
     f.write(tt)
     f.close()
-    
-# write file to a new csv file
+
+# Find top words    
 main_data["top_words"] = np.array([GetTopWord(text,10) for text in guide_data])
+
+# write file to a new csv file
 main_data.to_csv('./data/FilteredTravelData.csv')
 
 # code not needed

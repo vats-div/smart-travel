@@ -25,7 +25,7 @@ import MySQLdb as db
 
 # read the ./data/TravelData.csv
 
-main_data = pd.read_csv("./data/FilteredTravelData.csv").fillna(value='')
+main_data = pd.read_csv("./data/FilteredTravelData.csv").fillna(value=' ')
 num_words = np.array([len(gg.split()) for gg in main_data["all_data"]])
 title = np.array(main_data["title"])
 region = np.array(main_data["Region"])
@@ -55,7 +55,6 @@ create table MainData (
 cr.execute(tmp)
 
 for i in range(num_rows): 
-    print i
     tmp_c = "INSERT INTO MainData (id, title, top_words, region, num_words, url) VALUES (%s, %s, %s, %s, %s, %s)" 
     if type(region[i]) == type(1.0):
         region[i] = ' '
