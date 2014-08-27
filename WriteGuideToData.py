@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug 13 15:01:26 2014
-
-@author: dvats
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Mon Aug  4 15:10:42 2014
 
 @author: dvats
@@ -17,6 +10,11 @@ Created on Mon Aug  4 15:10:42 2014
 2) First attempt was to compute entropy of words individually
     and then look at the distributio of the words -> didn't work that well
 3) To do -> now look at a more global approach that uses topic modeling
+
+Aug 27: Finished the above three steps!!!
+
+The code below now writes the relevant data to a database that is called
+by the web app
 """
 
 import numpy as np
