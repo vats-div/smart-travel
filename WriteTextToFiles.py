@@ -2,6 +2,10 @@
 """
 Created on Tue Aug 19 11:50:45 2014
 
+Code writes th dictionary ofwords, countries, and cities
+to a file so that error checking can be done when a user
+enters a word that is not in the database
+
 @author: dvats
 """
 
