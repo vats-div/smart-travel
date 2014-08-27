@@ -2,6 +2,9 @@
 """
 Created on Wed Aug  6 23:42:43 2014
 
+Code to read data extracted from xml wikipedia dump
+and filtering it to extract relevant data from guide books
+
 @author: dvats
 """
 
@@ -16,11 +19,12 @@ from nltk.corpus import wordnet as wn
 from nltk.corpus.reader import NOUN
 from nltk.stem import wordnet
 import nltk
-
 import re
-
         
 def get_wordnet_pos(treebank_tag):
+    """
+    Get proper label for adjective, verb, noun, and adverb
+    """
 
     if treebank_tag.startswith('J'):
         return wordnet.wordnet.ADJ
@@ -33,8 +37,11 @@ def get_wordnet_pos(treebank_tag):
     else:
         return ''
     
-# convert word to singular
 def ConvertToSingular(word):
+    """
+    convert word to singular 
+    (eventually not used in final code since I use the nltk package)
+    """
     
     synsets = wn.synsets(word, NOUN)
     if len(synsets) > 0:
@@ -45,6 +52,9 @@ def ConvertToSingular(word):
         return word
 
 def MyStemWord(word,inp):
+    """
+    Stems words using nltk and wordnet
+    """    
     
     lmtzr = wordnet.WordNetLemmatizer()
     if inp == '':
@@ -52,8 +62,13 @@ def MyStemWord(word,inp):
     else:
         return lmtzr.lemmatize(word, inp)
     
-# input a string and output a clean string
 def FilterData(text, sw, i):
+    """
+    input a string and output a clean string
+    text: string
+    sw: list of stopwords
+    i: guide number used for debugging
+    """
     
     print i
     
@@ -75,17 +90,18 @@ def FilterData(text, sw, i):
     pp_tag = nltk.pos_tag(text)    
     text = np.array([MyStemWord(s[0], get_wordnet_pos(s[1])) \
                 for s in pp_tag if s[0] not in sw])  
-    
-    #text = np.array([s for s in text if s not in sw])
-    
+        
     # remove all two letter words
     text = np.array([s for s in text if len(s) > 2])
-    #return text
+
     return " ".join(text)
 
-# merge strings with the DataFrame df
-# return numpy array
+
 def MergeStringColumns(df,strs):
+    """
+    merge strings with the DataFrame df
+    return numpy array
+    """
 
     if type(df[strs[0]]) == float(1.0):
             df[strs[0]] = ''
@@ -103,9 +119,13 @@ def MergeStringColumns(df,strs):
             df[strs[i]] = ''
 
         tmp = tmp + ' ' + df[strs[i]]
+        
     return np.array(tmp)
     
 def GetTopWord(text,num_w):
+    """
+    Return num_w most common words in the string text
+    """
     cc = Counter(text.split()).most_common(num_w)
     return ' '.join([cw[0] for cw in cc])
     
@@ -114,6 +134,12 @@ def RemoveWordsInKeys(text,kys):
     return " ".join(text)
 
 def RemoveLowFrequencyWords(guide_data, num_w):
+    """
+    Find low frequency words and store these words in
+    a file ./word_files/extra_stopwords
+    NOTE: I only run this in the java code when learning a 
+    statistical model for computational efficiency
+    """
     txt_all = ' '.join(guide_data)
     cc = Counter(txt_all.split())
     kys = np.array(cc.keys())
@@ -128,12 +154,12 @@ def RemoveLowFrequencyWords(guide_data, num_w):
     f.close()
     
     # remove words from guide_data that are in keys
-    # I only run this in the java code when learning a statistical modl
-    # for computational efficiency
-    
     #guide_data = np.array([RemoveWordsInKeys(text,kys) for text in guide_data])
         
 def RemoveCityReference(guide_data,title):
+    """
+    If the word in title appears in guide_data, remove it
+    """
     
     for i, tt in enumerate(title):
         
@@ -146,6 +172,10 @@ def RemoveCityReference(guide_data,title):
     return guide_data
     
 def AddRegionsFromPrevious(main_data, main_data_copy):
+    """
+    Some Region entries are not filled.  This code tries to fill
+    it by looking at the region entries in LinkBefore
+    """
     region = np.array(main_data["Region"])
     link_before = np.array(main_data["LinkBefore"])
     
@@ -191,7 +221,11 @@ def AddRegionsFromPrevious(main_data, main_data_copy):
 
     return region
     
-## START OF MAIN FILES
+
+"""
+START OF MAIN CODE
+"""    
+
 print "Reading File..."
 main_data = pd.read_csv("./data/TravelData.csv").fillna(value = '')
 print "Done Reading File..."
