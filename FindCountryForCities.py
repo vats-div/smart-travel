@@ -2,6 +2,11 @@
 """
 Created on Tue Aug 19 16:16:01 2014
 
+Get the country name of each city using database of countries
+in countries_list.txt
+
+Write the countries to a database
+
 @author: dvats
 """
 
