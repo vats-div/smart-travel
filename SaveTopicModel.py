@@ -2,6 +2,9 @@
 """
 Created on Wed Aug 13 11:21:37 2014
 
+Scripts to read the output of the topic model (run using mallet)
+into python
+
 @author: dvats
 """
 
@@ -16,6 +19,10 @@ from sklearn.preprocessing import normalize
 import pickle 
 
 def GetID(text):
+    """
+    Get document id from the the text of the form
+    guide_data/id.txt
+    """
     text = text.split()
     ind = text[1]
     ind = ind.split('.txt')[0]
@@ -23,9 +30,10 @@ def GetID(text):
     return ind
 
 def ReadDocumentTopics(num_docs, num_topics):   
-    # read document in ./mallet_output/per_document_output.gz
-    # and count the number of times a topic appears
-
+    """
+    read document in ./mallet_output/per_document_output.gz
+    and count the number of times a topic appears
+    """
     # read file
     f = gzip.open('./mallet_output/per_document_output.gz', 'rb')
     f.readline()
@@ -46,6 +54,9 @@ def ReadDocumentTopics(num_docs, num_topics):
     return doc_tops
         
 def ReadTopicProps(num_docs, num_topics):
+    """
+    Find the topic proportions for each document (guide_book)
+    """
 
     f = open("mallet_output/topic_props.txt")
     f.readline()
@@ -62,6 +73,9 @@ def ReadTopicProps(num_docs, num_topics):
     return topic_prop
     
 def ReadWordCounts(num_topics):
+    """
+    Read the number of times a word is mapped to a topic
+    """
     
     f = open("mallet_output/word_topic_counts.txt")
 
@@ -87,8 +101,14 @@ def ReadWordCounts(num_topics):
     return word_count, np.array(word_list)
     
 def ScoreDocument(X, word_count,total_words_eachtopic,topic_props,i):
+
+    """
+    Main algorithm to score documents based on a keyword
+    See test_web/app/RankingUsingMallet.py for more details
+    """    
     
     # score = (# words in doc) * \sum[ (# times word in T_i) / (# words) * P(T_i) ]    
+    
     tmp = np.array(word_count[i,:].todense()).flatten()
     tmp = tmp / total_words_eachtopic 
     tmp = np.dot(topic_props, tmp)
