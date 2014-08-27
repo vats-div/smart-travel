@@ -2,10 +2,11 @@
 """
 Created on Sun Aug  3 21:22:38 2014
 
+convert the data from wikivoyage to a csv file
+
 @author: dvats
 """
 
-# convert the data from wikivoyage to a csv file
 
 import re
 import pandas as pd
