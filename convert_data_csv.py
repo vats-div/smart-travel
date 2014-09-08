@@ -12,6 +12,7 @@ import re
 import pandas as pd
 import numpy as np
 
+
 def CleanData(text):
     # remove headers like See, Do, etc
     section_headings = ["See", "Do", "Learn", \
@@ -19,19 +20,23 @@ def CleanData(text):
                         "GuideClass", "LinkBefore", "Region"]
     for s in section_headings:
         text = text.replace("<h2>"+s+"</h2>", "")
-    
     # remove brackets like [ and ]
     text = text.replace("[", "").replace("]", "")   
-    
     return text
 
-# return pattern from a string that contain pattern="id_num" url
+
 def GetPattern(text, pattern):
+    """
+    return pattern from a string that contain pattern="id_num" url
+    """
     tmp = re.search(pattern, text)
     return text[tmp.end():].split('"', 1)[1].split('"', 1)[0]
 
-# return a dictionary with headings given by <h>HEADING</h>
+
 def GetMainData(text):
+    """
+    return a dictionary with headings given by <h>HEADING</h>
+    """
     temp_text = text.split('\n', 1)[1]
     temp_text = temp_text.replace("</doc>", "")
 
@@ -44,7 +49,7 @@ def GetMainData(text):
     MainData = {}
     for tt in text_divide:
         st = tt.split('\n', 1)[0] # get te <h>LABEL</h> line
-        st = st.replace("<h>", "").replace("</h>","")
+        st = st.replace("<h>", "").replace("</h>", "")
         MainData[st] = tt.split('\n', 1)[1].replace('\n', " ").replace('\r', " ").lstrip().rstrip()
         
     return MainData
@@ -75,7 +80,7 @@ for h in section_headings:
                     
 # iterate over all elements in sep_data
 for i, ss in enumerate(sep_data):
-    temp_data = GetMainData(ss) # return a dictionary
+    temp_data = GetMainData(ss)  # return a dictionary
     for k in temp_data.keys():
         final_data[k][i] = temp_data[k]
 

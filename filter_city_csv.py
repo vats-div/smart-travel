@@ -20,7 +20,8 @@ from nltk.corpus.reader import NOUN
 from nltk.stem import wordnet
 import nltk
 import re
-        
+
+
 def get_wordnet_pos(treebank_tag):
     """
     Get proper label for adjective, verb, noun, and adverb
@@ -36,7 +37,8 @@ def get_wordnet_pos(treebank_tag):
         return wordnet.wordnet.ADV
     else:
         return ''
-    
+
+
 def ConvertToSingular(word):
     """
     convert word to singular 
@@ -51,6 +53,7 @@ def ConvertToSingular(word):
     else:
         return word
 
+
 def MyStemWord(word,inp):
     """
     Stems words using nltk and wordnet
@@ -62,6 +65,7 @@ def MyStemWord(word,inp):
     else:
         return lmtzr.lemmatize(word, inp)
     
+
 def FilterData(text, sw, i):
     """
     input a string and output a clean string
@@ -71,11 +75,9 @@ def FilterData(text, sw, i):
     """
     
     print i
-    
     if type(1.0) == type(text):
-        text = ' '
-        return text
-        
+        return ' '
+
     # remove punctuations
     text = re.sub(r'\[.*?\]|\(.*?\)|\W', ' ', text)
     ff = open("./word_files/remove_puncs.txt")
@@ -122,6 +124,7 @@ def MergeStringColumns(df,strs):
         
     return np.array(tmp)
     
+
 def GetTopWord(text,num_w):
     """
     Return num_w most common words in the string text
@@ -129,9 +132,11 @@ def GetTopWord(text,num_w):
     cc = Counter(text.split()).most_common(num_w)
     return ' '.join([cw[0] for cw in cc])
     
+
 def RemoveWordsInKeys(text,kys):
     text = [s for s in text.split() if s not in kys]
     return " ".join(text)
+
 
 def RemoveLowFrequencyWords(guide_data, num_w):
     """
@@ -156,6 +161,7 @@ def RemoveLowFrequencyWords(guide_data, num_w):
     # remove words from guide_data that are in keys
     #guide_data = np.array([RemoveWordsInKeys(text,kys) for text in guide_data])
         
+
 def RemoveCityReference(guide_data,title):
     """
     If the word in title appears in guide_data, remove it
@@ -171,6 +177,7 @@ def RemoveCityReference(guide_data,title):
         
     return guide_data
     
+
 def AddRegionsFromPrevious(main_data, main_data_copy):
     """
     Some Region entries are not filled.  This code tries to fill

@@ -32,7 +32,7 @@ url = np.array(main_data["url"])
 num_rows = len(main_data)
 
 #Open connection to mysql database
-con = db.connect('localhost','root','','guide_data')
+con = db.connect('localhost', 'root', '', 'guide_data')
 
 # cursors
 cr = con.cursor()
@@ -52,12 +52,12 @@ create table MainData (
 '''
 cr.execute(tmp)
 
-for i in range(num_rows): 
-    tmp_c = "INSERT INTO MainData (id, title, top_words, region, num_words, url) VALUES (%s, %s, %s, %s, %s, %s)" 
+for i in range(num_rows):
+    tmp_c = "INSERT INTO MainData (id, title, top_words, region, num_words, url) VALUES (%s, %s, %s, %s, %s, %s)"
     if type(region[i]) == type(1.0):
         region[i] = ' '
-    tmp_v = [i+1, title[i], top_words[i], region[i].replace('_',' '), num_words[i], url[i]]
-    cr.execute(tmp_c,tuple(tmp_v))
+    tmp_v = [i+1, title[i], top_words[i], region[i].replace('_', ' '), num_words[i], url[i]]
+    cr.execute(tmp_c, tuple(tmp_v))
 
 con.commit()
 cr.close()
